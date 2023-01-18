@@ -1,6 +1,6 @@
 from typing import Iterable
 
-from comparable import Comparable
+from .comparable import Comparable
 
 
 def is_sorted(iterable: Iterable[Comparable]) -> bool:

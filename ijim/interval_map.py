@@ -2,12 +2,12 @@ import copy
 import bisect
 from typing import Iterable, Generic, TypeVar
 
-from comparable import Comparable
-from utils import (
+from .comparable import Comparable
+from .utils import (
     is_sorted,
     has_duplicates,
 )
-from exceptions import (
+from .exceptions import (
     IntervalMapUnequalLength,
     IntervalMapMustBeSorted,
     IntervalMapNoDuplicates,
@@ -72,3 +72,24 @@ class IntervalMap(Generic[ComparableKey, AnyValueType]):
             del self._vals[ind + 1]
             return True
         return False
+
+    def slice_add(
+        self,
+        start: ComparableKey,
+        end: ComparableKey,
+        summand: AnyValueType,
+    ) -> None:
+        if start > end:
+            return
+
+        end_ind = bisect.bisect_left(self._lpoints, end)
+        val = self._vals[end_ind]
+
+        start_ind = bisect.bisect(self._lpoints, start)
+        self.set(start, self._vals[start_ind] + summand)
+        end_ind = bisect.bisect_left(self._lpoints, end)
+
+        for ind in range(start_ind + 2, end_ind + 1):
+            self._vals[ind] += summand
+
+        self.set(end, val)
