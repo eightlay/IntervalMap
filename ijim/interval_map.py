@@ -45,7 +45,7 @@ class IntervalMap(Generic[ComparableKey, AnyValueType]):
         self.set(key, val)
 
     def set(self, key: ComparableKey, val: AnyValueType) -> None:
-        ind = bisect.bisect(self._lpoints, key)
+        ind = bisect.bisect_left(self._lpoints, key)
 
         if ind == len(self._lpoints):
             if self._vals[ind] != val:
