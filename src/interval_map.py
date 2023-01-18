@@ -47,17 +47,19 @@ class IntervalMap(Generic[ComparableKey, AnyValueType]):
     def set(self, key: ComparableKey, val: AnyValueType) -> None:
         ind = bisect.bisect(self._lpoints, key)
 
-        if ind >= len(self._lpoints):
-            self._lpoints.append(key)
-            self._vals.append(val)
+        if ind == len(self._lpoints):
+            if self._vals[ind] != val:
+                self._lpoints.append(key)
+                self._vals.append(val)
+            return
 
         if self._lpoints[ind] == key:
             self._vals[ind + 1] = val
-        else:
+        elif self._vals[ind] != val:
             self._lpoints.insert(ind, key)
             self._vals.insert(ind + 1, val)
 
-    def __delitem__(self, key: ComparableKey) -> bool:
+    def __delitem__(self, key: ComparableKey) -> None:
         self.unset(key)
 
     def unset(self, key: ComparableKey) -> bool:
