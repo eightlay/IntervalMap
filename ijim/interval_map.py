@@ -220,7 +220,7 @@ class IntervalMap(Generic[ComparableKey, AnyValueType]):
                 self.slice_add(other._lpoints[-1], None, other._vals[-1])
         else:
             for i in range(1, len(self._vals)):
-                self._vals[i] += AnyValueType
+                self._vals[i] += other
 
     def sub(self, other: IntervalMap | AnyValueType) -> None:
         """Subtract `other` map or subtract some value from all intervals (
