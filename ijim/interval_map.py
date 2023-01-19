@@ -4,12 +4,12 @@ import bisect
 from pprint import pformat
 from typing import Iterable, Generic, TypeVar
 
-from .comparable import Comparable
-from .utils import (
+from comparable import Comparable
+from utils import (
     is_sorted,
     has_duplicates,
 )
-from .exceptions import (
+from exceptions import (
     IntervalMapUnequalLength,
     IntervalMapMustBeSorted,
     IntervalMapNoDuplicates,
@@ -66,6 +66,17 @@ class IntervalMap(Generic[ComparableKey, AnyValueType]):
 
         self._lpoints = list(copy.deepcopy(interval_left_points))
         self._vals = [copy.deepcopy(default_val)] + list(copy.deepcopy(vals))
+        
+        for i in range(len(self._lpoints) - 1, -1, -1):
+            if self._vals[i + 1] == self._vals[i]:
+                self.__delete_by_index(i)
+            
+    def __delete_by_index(self, ind: int) -> bool:
+        if ind < len(self._lpoints):
+            del self._lpoints[ind]
+            del self._vals[ind + 1]
+            return True
+        return False
 
     def __getitem__(self, key: ComparableKey) -> AnyValueType:
         return self.get(key)
@@ -101,7 +112,10 @@ class IntervalMap(Generic[ComparableKey, AnyValueType]):
             return
 
         if self._lpoints[ind] == key:
-            self._vals[ind + 1] = val
+            if self._vals[ind] != val:
+                self._vals[ind + 1] = val
+            else:
+                self.__delete_by_index(ind)
         elif self._vals[ind] != val:
             self._lpoints.insert(ind, key)
             self._vals.insert(ind + 1, val)
@@ -124,8 +138,15 @@ class IntervalMap(Generic[ComparableKey, AnyValueType]):
         if ind >= len(self._lpoints):
             return False
         elif self._lpoints[ind] == key:
-            del self._lpoints[ind]
-            del self._vals[ind + 1]
+            self.__delete_by_index(ind)
+            
+            if (
+                ind < len(self._vals) - 1
+                and
+                self._vals[ind] == self._vals[ind + 1]
+            ):
+                self.__delete_by_index(ind)
+            
             return True
         return False
 
@@ -149,15 +170,15 @@ class IntervalMap(Generic[ComparableKey, AnyValueType]):
             end_ind = bisect.bisect(self._lpoints, end)
             val = self._vals[end_ind]
 
-        start_ind = bisect.bisect(self._lpoints, start)
-        self.set(start, self._vals[start_ind] + summand)
+        start_ind = bisect.bisect_left(self._lpoints, start)
+        self.set(start, self._vals[start_ind + 1] + summand)
 
         if end is not None:
             end_ind = bisect.bisect_left(self._lpoints, end)
         else:
             end_ind = len(self._vals)
 
-        for ind in range(start_ind + 2, end_ind + 1):
+        for ind in range(start_ind + 1, end_ind + 1):
             self._vals[ind] += summand
 
         if end is not None:
@@ -216,10 +237,11 @@ class IntervalMap(Generic[ComparableKey, AnyValueType]):
 
     def __str__(self) -> str:
         return (
-            pformat(self.to_dict())
+            pformat(self.to_dict(), sort_dicts=False)
             .replace('(', '[')
             .replace('[None', '(-inf')
             .replace('None]', '+inf)')
+            .replace('None)', '+inf)')
         )
 
     def to_dict(
@@ -238,7 +260,10 @@ class IntervalMap(Generic[ComparableKey, AnyValueType]):
     ) -> tuple[tuple[ComparableKey, ComparableKey], AnyValueType]:
         if self.__iter == -1:
             result = (
-                (None, self._lpoints[0]),
+                (
+                    None,
+                    self._lpoints[0] if self.__len > -1 else None
+                ),
                 self._vals[0]
             )
         elif self.__iter == self.__len:
