@@ -171,12 +171,15 @@ class IntervalMap(Generic[ComparableKey, AnyValueType]):
             val = self._vals[end_ind]
 
         start_ind = bisect.bisect_left(self._lpoints, start)
-        self.set(start, self._vals[start_ind + 1] + summand)
+        val_ind = start_ind + 1
+        val_ind = val_ind if val_ind < len(self._vals) else 0
+        self.set(start, self._vals[val_ind] + summand)
+        start_ind = bisect.bisect(self._lpoints, start)
 
         if end is not None:
             end_ind = bisect.bisect_left(self._lpoints, end)
         else:
-            end_ind = len(self._vals)
+            end_ind = len(self._vals) - 1
 
         for ind in range(start_ind + 1, end_ind + 1):
             self._vals[ind] += summand
@@ -213,7 +216,8 @@ class IntervalMap(Generic[ComparableKey, AnyValueType]):
                     other._lpoints[i + 1],
                     other[other._lpoints[i]]
                 )
-            self.slice_add(other._lpoints[-1], None, other._vals[-1])
+            if len(self._lpoints) > 0:
+                self.slice_add(other._lpoints[-1], None, other._vals[-1])
         else:
             for i in range(1, len(self._vals)):
                 self._vals[i] += AnyValueType
