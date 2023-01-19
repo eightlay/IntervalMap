@@ -1,5 +1,7 @@
+from __future__ import annotations
 import copy
 import bisect
+from pprint import pformat
 from typing import Iterable, Generic, TypeVar
 
 from .comparable import Comparable
@@ -76,20 +78,98 @@ class IntervalMap(Generic[ComparableKey, AnyValueType]):
     def slice_add(
         self,
         start: ComparableKey,
-        end: ComparableKey,
+        end: ComparableKey | None,
         summand: AnyValueType,
     ) -> None:
-        if start > end:
-            return
+        if end is not None:
+            if start > end:
+                return
 
-        end_ind = bisect.bisect_left(self._lpoints, end)
-        val = self._vals[end_ind]
+            end_ind = bisect.bisect(self._lpoints, end)
+            val = self._vals[end_ind]
 
         start_ind = bisect.bisect(self._lpoints, start)
         self.set(start, self._vals[start_ind] + summand)
-        end_ind = bisect.bisect_left(self._lpoints, end)
+
+        if end is not None:
+            end_ind = bisect.bisect_left(self._lpoints, end)
+        else:
+            end_ind = len(self._vals)
 
         for ind in range(start_ind + 2, end_ind + 1):
             self._vals[ind] += summand
 
-        self.set(end, val)
+        if end is not None:
+            self.set(end, val)
+
+    def slice_sub(
+        self,
+        start: ComparableKey,
+        end: ComparableKey,
+        summand: AnyValueType,
+    ) -> None:
+        self.slice_add(start, end, -summand)
+
+    def add(self, other: IntervalMap | AnyValueType) -> None:
+        if isinstance(other, IntervalMap):
+            for i in range(len(other._lpoints) - 1):
+                self.slice_add(
+                    other._lpoints[i],
+                    other._lpoints[i + 1],
+                    other[other._lpoints[i]]
+                )
+            self.slice_add(other._lpoints[-1], None, other._vals[-1])
+        else:
+            for i in range(1, len(self._vals)):
+                self._vals[i] += AnyValueType
+
+    def sub(self, other: IntervalMap | AnyValueType) -> None:
+        self.add(-other)
+
+    def __neg__(self) -> IntervalMap:
+        im = copy.deepcopy(self)
+
+        for i in range(1, len(im._vals)):
+            im._vals[i] *= -1
+
+        return im
+
+    def __str__(self) -> str:
+        return pformat(self.to_dict())
+
+    def to_dict(
+        self,
+    ) -> dict[tuple[ComparableKey, ComparableKey], AnyValueType]:
+        return {k: v for k, v in self}
+
+    def __iter__(self) -> IntervalMap:
+        self.__iter = -1
+        self.__len = len(self._lpoints) - 1
+        return self
+
+    def __next__(
+        self,
+    ) -> tuple[tuple[ComparableKey, ComparableKey], AnyValueType]:
+        if self.__iter == -1:
+            result = (
+                (None, self._lpoints[0]),
+                self._vals[0]
+            )
+        elif self.__iter == self.__len:
+            result = (
+                (self._lpoints[-1], None),
+                self._vals[-1]
+            )
+        elif self.__iter < self.__len:
+            result = (
+                (
+                    self._lpoints[self.__iter],
+                    self._lpoints[self.__iter + 1]
+                ),
+                self._vals[self.__iter + 1]
+            )
+        else:
+            raise StopIteration
+
+        self.__iter += 1
+        return result
