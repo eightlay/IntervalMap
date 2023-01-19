@@ -21,12 +21,42 @@ AnyValueType = TypeVar("AnyValueType")
 
 
 class IntervalMap(Generic[ComparableKey, AnyValueType]):
+    """IntervalMap maps value to some interval.
+    It has default left value.
+
+    Args:
+        Generic (ComparableKey, AnyValueType): key and value types
+        
+    Example:
+        (-inf, 1) -> 0
+        
+        [1, 4) -> 3
+        
+        [4, 7) -> 10
+        
+        [7, +inf) -> 17
+    """
     def __init__(
         self,
         default_val: AnyValueType,
         interval_left_points: Iterable[ComparableKey] = [],
         vals: Iterable[AnyValueType] = [],
     ) -> None:
+        """Interval map
+
+        Args:
+            default_val (AnyValueType): the leftmost value
+            interval_left_points (Iterable[ComparableKey], optional): 
+            iterable of left points of intervals. Defaults to [].
+            vals (Iterable[AnyValueType], optional): 
+            iterable of values which match in order to left points.
+            Defaults to [].
+
+        Raises:
+            IntervalMapNoDuplicates: points must not have duplicates
+            IntervalMapMustBeSorted: points must be sorted in ascending order
+            IntervalMapUnequalLength: points length and vals length must be equal
+        """
         if has_duplicates(interval_left_points):
             raise IntervalMapNoDuplicates
         if not is_sorted(interval_left_points):
@@ -41,12 +71,27 @@ class IntervalMap(Generic[ComparableKey, AnyValueType]):
         return self.get(key)
 
     def get(self, key: ComparableKey) -> AnyValueType:
+        """Find interval which fits the `key` and return its
+        mapped value
+
+        Args:
+            key (ComparableKey)
+
+        Returns:
+            AnyValueType
+        """
         return self._vals[bisect.bisect(self._lpoints, key)]
 
     def __setitem__(self, key: ComparableKey, val: AnyValueType) -> None:
         self.set(key, val)
 
     def set(self, key: ComparableKey, val: AnyValueType) -> None:
+        """Set new or reset interval value
+
+        Args:
+            key (ComparableKey): new intreval key
+            val (AnyValueType): new value
+        """
         ind = bisect.bisect_left(self._lpoints, key)
 
         if ind == len(self._lpoints):
@@ -65,6 +110,15 @@ class IntervalMap(Generic[ComparableKey, AnyValueType]):
         self.unset(key)
 
     def unset(self, key: ComparableKey) -> bool:
+        """Unset interval
+
+        Args:
+            key (ComparableKey): interval left point
+
+        Returns:
+            bool: True if interval was unset, False if there is no 
+            such interval left point
+        """
         ind = bisect.bisect_left(self._lpoints, key)
 
         if ind >= len(self._lpoints):
@@ -81,6 +135,13 @@ class IntervalMap(Generic[ComparableKey, AnyValueType]):
         end: ComparableKey | None,
         summand: AnyValueType,
     ) -> None:
+        """Add `summand` to all values in `[start, end)`
+
+        Args:
+            start (ComparableKey)
+            end (ComparableKey | None)
+            summand (AnyValueType)
+        """
         if end is not None:
             if start > end:
                 return
@@ -106,11 +167,24 @@ class IntervalMap(Generic[ComparableKey, AnyValueType]):
         self,
         start: ComparableKey,
         end: ComparableKey,
-        summand: AnyValueType,
+        subtrahend: AnyValueType,
     ) -> None:
-        self.slice_add(start, end, -summand)
+        """Subtract `subtrahend` from all values in `[start, end)`
+
+        Args:
+            start (ComparableKey)
+            end (ComparableKey | None)
+            subtrahend (AnyValueType)
+        """
+        self.slice_add(start, end, -subtrahend)
 
     def add(self, other: IntervalMap | AnyValueType) -> None:
+        """Add `other` map or add some value to all intervals (
+        doesn't effect default map value) inplace
+
+        Args:
+            other (IntervalMap | AnyValueType)
+        """
         if isinstance(other, IntervalMap):
             for i in range(len(other._lpoints) - 1):
                 self.slice_add(
@@ -124,6 +198,12 @@ class IntervalMap(Generic[ComparableKey, AnyValueType]):
                 self._vals[i] += AnyValueType
 
     def sub(self, other: IntervalMap | AnyValueType) -> None:
+        """Subtract `other` map or subtract some value from all intervals (
+        doesn't effect default map value) inplace
+
+        Args:
+            other (IntervalMap | AnyValueType)
+        """
         self.add(-other)
 
     def __neg__(self) -> IntervalMap:
@@ -135,11 +215,17 @@ class IntervalMap(Generic[ComparableKey, AnyValueType]):
         return im
 
     def __str__(self) -> str:
-        return pformat(self.to_dict())
+        return (
+            pformat(self.to_dict())
+            .replace('(', '[')
+            .replace('[None', '(-inf')
+            .replace('None]', '+inf)')
+        )
 
     def to_dict(
         self,
     ) -> dict[tuple[ComparableKey, ComparableKey], AnyValueType]:
+        """Convert `IntervalMap` to `dict`"""
         return {k: v for k, v in self}
 
     def __iter__(self) -> IntervalMap:
