@@ -4,12 +4,12 @@ import bisect
 from pprint import pformat
 from typing import Iterable, Generic, TypeVar
 
-from comparable import Comparable
-from utils import (
+from .comparable import Comparable
+from .utils import (
     is_sorted,
     has_duplicates,
 )
-from exceptions import (
+from .exceptions import (
     IntervalMapUnequalLength,
     IntervalMapMustBeSorted,
     IntervalMapNoDuplicates,
