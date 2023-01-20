@@ -171,8 +171,23 @@ class IntervalMap(Generic[ComparableKey, AnyValueType]):
             val = self._vals[end_ind]
 
         start_ind = bisect.bisect_left(self._lpoints, start)
-        val_ind = start_ind + 1
-        val_ind = val_ind if val_ind < len(self._vals) else 0
+
+        if (
+            start_ind == 0 
+            and 
+            len(self._lpoints) > 0 
+            and 
+            start < self._lpoints[0]
+        ):
+            val_ind = 0
+        else:
+            val_ind = start_ind + int(
+                start_ind < len(self._lpoints)
+                and
+                start == self._lpoints[start_ind]
+            )
+            val_ind = val_ind if val_ind < len(self._vals) else 0
+
         self.set(start, self._vals[val_ind] + summand)
         start_ind = bisect.bisect(self._lpoints, start)
 
