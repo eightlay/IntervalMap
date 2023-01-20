@@ -231,7 +231,7 @@ class IntervalMap(Generic[ComparableKey, AnyValueType]):
                     other._lpoints[i + 1],
                     other[other._lpoints[i]]
                 )
-            if len(self._lpoints) > 0:
+            if len(other._lpoints) > 0:
                 self.slice_add(other._lpoints[-1], None, other._vals[-1])
         else:
             for i in range(1, len(self._vals)):
