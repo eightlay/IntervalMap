@@ -232,7 +232,7 @@ class IntervalMap(Generic[ComparableKey, AnyValueType]):
         self.add(-other)
 
     def __neg__(self) -> IntervalMap:
-        im = copy.deepcopy(self)
+        im = self.copy()
 
         for i in range(1, len(im._vals)):
             im._vals[i] *= -1
@@ -288,3 +288,6 @@ class IntervalMap(Generic[ComparableKey, AnyValueType]):
 
         self.__iter += 1
         return result
+
+    def copy(self) -> IntervalMap:
+        return copy.deepcopy(self)
