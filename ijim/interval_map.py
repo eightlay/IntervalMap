@@ -171,12 +171,30 @@ class IntervalMap(Generic[ComparableKey, AnyValueType]):
             val = self._vals[end_ind]
 
         start_ind = bisect.bisect_left(self._lpoints, start)
-        self.set(start, self._vals[start_ind + 1] + summand)
+
+        if (
+            start_ind == 0 
+            and 
+            len(self._lpoints) > 0 
+            and 
+            start < self._lpoints[0]
+        ):
+            val_ind = 0
+        else:
+            val_ind = start_ind + int(
+                start_ind < len(self._lpoints)
+                and
+                start == self._lpoints[start_ind]
+            )
+            val_ind = val_ind if val_ind < len(self._vals) else 0
+
+        self.set(start, self._vals[val_ind] + summand)
+        start_ind = bisect.bisect(self._lpoints, start)
 
         if end is not None:
             end_ind = bisect.bisect_left(self._lpoints, end)
         else:
-            end_ind = len(self._vals)
+            end_ind = len(self._vals) - 1
 
         for ind in range(start_ind + 1, end_ind + 1):
             self._vals[ind] += summand
@@ -213,10 +231,11 @@ class IntervalMap(Generic[ComparableKey, AnyValueType]):
                     other._lpoints[i + 1],
                     other[other._lpoints[i]]
                 )
-            self.slice_add(other._lpoints[-1], None, other._vals[-1])
+            if len(self._lpoints) > 0:
+                self.slice_add(other._lpoints[-1], None, other._vals[-1])
         else:
             for i in range(1, len(self._vals)):
-                self._vals[i] += AnyValueType
+                self._vals[i] += other
 
     def sub(self, other: IntervalMap | AnyValueType) -> None:
         """Subtract `other` map or subtract some value from all intervals (
@@ -228,7 +247,7 @@ class IntervalMap(Generic[ComparableKey, AnyValueType]):
         self.add(-other)
 
     def __neg__(self) -> IntervalMap:
-        im = copy.deepcopy(self)
+        im = self.copy()
 
         for i in range(1, len(im._vals)):
             im._vals[i] *= -1
@@ -284,3 +303,6 @@ class IntervalMap(Generic[ComparableKey, AnyValueType]):
 
         self.__iter += 1
         return result
+
+    def copy(self) -> IntervalMap:
+        return copy.deepcopy(self)
