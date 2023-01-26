@@ -26,16 +26,17 @@ class IntervalMap(Generic[ComparableKey, AnyValueType]):
 
     Args:
         Generic (ComparableKey, AnyValueType): key and value types
-        
+
     Example:
         (-inf, 1) -> 0
-        
+
         [1, 4) -> 3
-        
+
         [4, 7) -> 10
-        
+
         [7, +inf) -> 17
     """
+
     def __init__(
         self,
         default_val: AnyValueType,
@@ -66,11 +67,11 @@ class IntervalMap(Generic[ComparableKey, AnyValueType]):
 
         self._lpoints = list(copy.deepcopy(interval_left_points))
         self._vals = [copy.deepcopy(default_val)] + list(copy.deepcopy(vals))
-        
+
         for i in range(len(self._lpoints) - 1, -1, -1):
             if self._vals[i + 1] == self._vals[i]:
                 self.__delete_by_index(i)
-            
+
     def __delete_by_index(self, ind: int) -> bool:
         if ind < len(self._lpoints):
             del self._lpoints[ind]
@@ -139,14 +140,14 @@ class IntervalMap(Generic[ComparableKey, AnyValueType]):
             return False
         elif self._lpoints[ind] == key:
             self.__delete_by_index(ind)
-            
+
             if (
                 ind < len(self._vals) - 1
                 and
                 self._vals[ind] == self._vals[ind + 1]
             ):
                 self.__delete_by_index(ind)
-            
+
             return True
         return False
 
@@ -173,10 +174,10 @@ class IntervalMap(Generic[ComparableKey, AnyValueType]):
         start_ind = bisect.bisect_left(self._lpoints, start)
 
         if (
-            start_ind == 0 
-            and 
-            len(self._lpoints) > 0 
-            and 
+            start_ind == 0
+            and
+            len(self._lpoints) > 0
+            and
             start < self._lpoints[0]
         ):
             val_ind = 0
