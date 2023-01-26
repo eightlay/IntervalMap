@@ -307,3 +307,13 @@ class IntervalMap(Generic[ComparableKey, AnyValueType]):
 
     def copy(self) -> IntervalMap:
         return copy.deepcopy(self)
+
+    def __eq__(self, other: IntervalMap) -> bool:
+        if len(self._lpoints) != len(other._lpoints):
+            return False
+        return all(
+            self._lpoints[i] == other._lpoints[i]
+            and
+            self._vals[i] == other._vals[i]
+            for i in range(len(self._lpoints))
+        )
