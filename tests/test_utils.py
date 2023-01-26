@@ -19,4 +19,5 @@ def test_is_sorted(array: list, expected: bool):
     ([1, 1, 3], True),
 ])
 def test_has_duplicates(array: list, expected: bool):
-    assert has_duplicates(array) == expected, expected
+    val = has_duplicates(array) == expected
+    assert val, f"expected {expected}, got {val}"
