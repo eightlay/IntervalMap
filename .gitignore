@@ -1,8 +1,5 @@
-### DVL specific
-input/
-output/
-*.lp
-testpack/
+### Testing
+.pytest_cache
 
 ### Dev specific
 .DS_Store
