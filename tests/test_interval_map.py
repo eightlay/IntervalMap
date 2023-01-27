@@ -91,3 +91,22 @@ def test_empty_getitem(im: IntervalMap, key: int, expected: int):
 def test_set(im: IntervalMap, key: int, val: int, expected: IntervalMap):
     im.set(key, val)
     assert im == expected
+
+
+@mark.parametrize("im, key, expected" , [
+    (lazy_fixture('empty_im'), 0, IntervalMap(0, [], [])),
+    (lazy_fixture('one_ten_im'), 0, IntervalMap(0, [1, 10], [1, 10])),
+    (lazy_fixture('one_ten_im'), 11, IntervalMap(0, [1, 10], [1, 10])),
+    (lazy_fixture('one_ten_im'), 5, IntervalMap(0, [1, 10], [1, 10])),
+    (lazy_fixture('one_ten_im'), 1, IntervalMap(0, [10], [10])),
+    (lazy_fixture('one_ten_im'), 10, IntervalMap(0, [1], [1])),
+    (lazy_fixture('alternation_im'), -1, IntervalMap(0, [1, 3, 5], [1, 0, 1])),
+    (lazy_fixture('alternation_im'), 1, IntervalMap(0, [5], [1])),
+    (lazy_fixture('alternation_im'), 2, IntervalMap(0, [1, 3, 5], [1, 0, 1])),
+    (lazy_fixture('alternation_im'), 3, IntervalMap(0, [1], [1])),
+    (lazy_fixture('alternation_im'), 5, IntervalMap(0, [1, 3], [1, 0])),
+    (lazy_fixture('alternation_im'), 6, IntervalMap(0, [1, 3, 5], [1, 0, 1])),
+])
+def test_unset(im: IntervalMap, key: int, expected: IntervalMap):
+    im.unset(key)
+    assert im == expected
