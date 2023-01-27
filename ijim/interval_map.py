@@ -101,7 +101,7 @@ class IntervalMap(Generic[ComparableKey, AnyValueType]):
         """Set new or reset interval value
 
         Args:
-            key (ComparableKey): new intreval key
+            key (ComparableKey): new interval key
             val (AnyValueType): new value
         """
         ind = bisect.bisect_left(self._lpoints, key)
@@ -113,13 +113,19 @@ class IntervalMap(Generic[ComparableKey, AnyValueType]):
             return
 
         if self._lpoints[ind] == key:
-            if self._vals[ind] != val:
-                self._vals[ind + 1] = val
-            else:
+            if self._vals[ind] == val:
                 self.__delete_by_index(ind)
+                
+                if ind + 1 < len(self._vals) and self._vals[ind + 1] == val:
+                    self.__delete_by_index(ind)
+            else:
+                self._vals[ind + 1] = val
         elif self._vals[ind] != val:
-            self._lpoints.insert(ind, key)
-            self._vals.insert(ind + 1, val)
+            if self._vals[ind + 1] == val:
+                self._lpoints[ind] = key
+            else:
+                self._lpoints.insert(ind, key)
+                self._vals.insert(ind + 1, val)
 
     def __delitem__(self, key: ComparableKey) -> None:
         self.unset(key)
