@@ -148,7 +148,7 @@ class IntervalMap(Generic[ComparableKey, AnyValueType]):
             self.__delete_by_index(ind)
 
             if (
-                ind < len(self._vals) - 1
+                ind + 1 < len(self._vals)
                 and
                 self._vals[ind] == self._vals[ind + 1]
             ):
