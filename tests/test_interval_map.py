@@ -18,6 +18,10 @@ def empty_im() -> IntervalMap:
 def one_ten_im() -> IntervalMap:
     return IntervalMap[int, int](0, [1, 10], [1, 10])
 
+@fixture
+def alternation_im() -> IntervalMap:
+    return IntervalMap[int, int](0, [1, 3, 5], [1, 0, 1])
+
 
 @mark.parametrize("default, points, vals, expected" , [
     (0, [], [], lazy_fixture('empty_im')),
@@ -61,3 +65,29 @@ def test_invalid_creation(
 def test_empty_getitem(im: IntervalMap, key: int, expected: int):
     val = im[key]
     assert val == expected, f"expected {expected}, got {val}"
+
+
+@mark.parametrize("im, key, val, expected" , [
+    (lazy_fixture('empty_im'), 0, 1, IntervalMap(0, [0], [1])),
+    (lazy_fixture('one_ten_im'), 5, 7, IntervalMap(0, [1, 5, 10], [1, 7, 10])),
+    (lazy_fixture('one_ten_im'), -1, 7, IntervalMap(0, [-1, 1, 10], [7, 1, 10])),
+    (lazy_fixture('one_ten_im'), 12, 7, IntervalMap(0, [1, 10, 12], [1, 10, 7])),
+    (lazy_fixture('one_ten_im'), 5, 7, IntervalMap(0, [1, 5, 10], [1, 7, 10])),
+    (lazy_fixture('one_ten_im'), 0, 1, IntervalMap(0, [0, 10], [1, 10])),
+    (lazy_fixture('one_ten_im'), 2, 1, IntervalMap(0, [1, 10], [1, 10])),
+    (lazy_fixture('one_ten_im'), 12, 1, IntervalMap(0, [1, 10, 12], [1, 10, 1])),
+    (lazy_fixture('one_ten_im'), 12, 10, IntervalMap(0, [1, 10], [1, 10])),
+    (lazy_fixture('alternation_im'), -1, 3, IntervalMap(0, [-1, 1, 3, 5], [3, 1, 0, 1])),
+    (lazy_fixture('alternation_im'), 2, 3, IntervalMap(0, [1, 2, 3, 5], [1, 3, 0, 1])),
+    (lazy_fixture('alternation_im'), 7, 3, IntervalMap(0, [1, 3, 5, 7], [1, 0, 1, 3])),
+    (lazy_fixture('alternation_im'), -1, 0, IntervalMap(0, [1, 3, 5], [1, 0, 1])),
+    (lazy_fixture('alternation_im'), -1, 1, IntervalMap(0, [-1, 3, 5], [1, 0, 1])),
+    (lazy_fixture('alternation_im'), 1, 0, IntervalMap(0, [5], [1])),
+    (lazy_fixture('alternation_im'), 7, 1, IntervalMap(0, [1, 3, 5], [1, 0, 1])),
+    (lazy_fixture('alternation_im'), 2, 1, IntervalMap(0, [1, 3, 5], [1, 0, 1])),
+    (lazy_fixture('alternation_im'), 2, 0, IntervalMap(0, [1, 2, 5], [1, 0, 1])),
+    (lazy_fixture('alternation_im'), 3, 1, IntervalMap(0, [1], [1])),
+])
+def test_set(im: IntervalMap, key: int, val: int, expected: IntervalMap):
+    im.set(key, val)
+    assert im == expected
