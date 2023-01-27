@@ -312,6 +312,11 @@ class IntervalMap(Generic[ComparableKey, AnyValueType]):
         return result
 
     def copy(self) -> IntervalMap:
+        """Returns a deepcopy of the IntervalMap
+
+        Returns:
+            IntervalMap
+        """
         return copy.deepcopy(self)
 
     def __eq__(self, other: IntervalMap) -> bool:
